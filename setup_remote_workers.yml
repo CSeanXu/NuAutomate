@@ -4,6 +4,22 @@
 
   tasks:
 
+    - name: 'install sys requirements [aptitude]'
+      apt:
+        update_cache: yes
+        pkg:
+        - libffi-dev
+        - python3-dev
+        - python3-pip
+        - python3-virtualenv
+        - build-essential
+        - libssl-dev
+
+    - name: 'install nucypher packages [pypi]'
+      pip:
+        name: 'nucypher[ursula]'
+        executable: pip3
+
     - name: "create geth keystore directory"
       become: yes
       file:
@@ -18,7 +34,7 @@
         dest: "{{keystore_dir}}"
         owner: root
 
-    - name: Find my public ip
+    - name: find my public ip
       uri:
         url: http://ifconfig.me/ip
         return_content: yes
@@ -36,12 +52,12 @@
         NUCYPHER_KEYRING_PASSWORD: "{{NUCYPHER_KEYRING_PASSWORD}}"
         NUCYPHER_WORKER_ETH_PASSWORD: "{{NUCYPHER_WORKER_ETH_PASSWORD}}"
 
-    - name: "Add Ursula systemd service file"
+    - name: "add Ursula systemd service file"
       template:
         dest: /etc/systemd/system/nucypher.service
         src: templates/nucypher.service.j2
 
-    - name: "Keep Ursula rinning (systemd service)"
+    - name: "keep Ursula rinning (systemd service)"
       systemd:
         state: started
         enabled: yes
