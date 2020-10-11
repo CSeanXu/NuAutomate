@@ -1,0 +1,49 @@
+- name: "Setup Remote Worker"
+  hosts: "{{ play_hosts }}"
+  remote_user: "{{default_user}}"
+
+  tasks:
+
+    - name: "create geth keystore directory"
+      become: yes
+      file:
+        path: "{{keystore_dir}}"
+        state: directory
+        mode: '0755'
+
+    - name: "copy local keystore file"
+      become: yes
+      copy:
+        src: "{{WORKER_ACCT_KEYSTORE_PATH}}"
+        dest: "{{keystore_dir}}"
+        owner: root
+
+    - name: Find my public ip
+      uri:
+        url: http://ifconfig.me/ip
+        return_content: yes
+      register: ip_response
+
+    - name: "check if /root/.local/share/nucypher/ursula.json exists"
+      stat:
+        path: /root/.local/share/nucypher/ursula.json
+      register: ursula_check
+
+    - name: "init Ursula worker"
+      when: ursula_check.stat.exists == False
+      command: "nucypher ursula init --provider {{ blockchain_provider }} --worker-address {{NUCYPHER_WORKER_ADDRESS}} --rest-host {{ip_response.content}} --network {{network_name}} --signer keystore:///root/keystore"
+      environment:
+        NUCYPHER_KEYRING_PASSWORD: "{{NUCYPHER_KEYRING_PASSWORD}}"
+        NUCYPHER_WORKER_ETH_PASSWORD: "{{NUCYPHER_WORKER_ETH_PASSWORD}}"
+
+    - name: "Add Ursula systemd service file"
+      template:
+        dest: /etc/systemd/system/nucypher.service
+        src: templates/nucypher.service.j2
+
+    - name: "Keep Ursula rinning (systemd service)"
+      systemd:
+        state: started
+        enabled: yes
+        daemon_reload: yes
+        name: nucypher

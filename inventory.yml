@@ -1,0 +1,27 @@
+all:
+  children:
+    nucypher:
+      children:
+        gemini:
+          children:
+
+            #### digital ocean uses default user "root" so we have to group these separately
+            digitalocean:
+              vars:
+                default_user: "root"
+              hosts:
+                1.1.1.1:
+                  WORKER_ACCT_KEYSTORE_PATH: "/Users/sean/Downloads/ethereum/keystore/UTC--2020-10-10T09-50-17.002224000Z--a8acdfee970d0b888f40939bb651377319d9c875"
+                  NUCYPHER_WORKER_ADDRESS: "0xa8acdfee970d0b888f40939bb651377319d9c875"
+
+          vars:
+            network_name: ibex
+            keystore_dir: '/root/keystore/'
+            blockchain_provider: 'wss://rinkeby.infura.io/ws/v3/xxxxxxxxxxxxxxxxxxxxxx'
+            geth_options: "--rinkeby"
+
+            # these can be overridden at the instance level if desired
+            NUCYPHER_KEYRING_PASSWORD: xxxxxxxxxxxxxxxxxxxxxxxx
+            NUCYPHER_WORKER_ETH_PASSWORD: xxxxxxxxxx
+            #nucypher_ursula_run_options: "--debug"
+            #nucypher_ursula_init_options: "--debug"
