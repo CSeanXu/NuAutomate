@@ -1,0 +1,12 @@
+import sys
+import json
+
+ursula_dot_json_path = "/root/.local/share/nucypher/ursula.json"
+
+with open(ursula_dot_json_path) as fr:
+    j = json.load(fr)
+
+j["provider_uri"] = sys.argv[1]
+
+with open(ursula_dot_json_path, "w") as fw:
+    json.dump(j, fw)

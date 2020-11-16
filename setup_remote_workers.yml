@@ -4,62 +4,94 @@
 
   tasks:
 
-    - name: 'install sys requirements [aptitude]'
-      apt:
-        update_cache: yes
-        pkg:
-        - libffi-dev
-        - python3-dev
-        - python3-pip
-        - python3-virtualenv
-        - build-essential
-        - libssl-dev
+    # - name: 'install sys requirements [aptitude]'
+    #   apt:
+    #     update_cache: yes
+    #     pkg:
+    #     - libffi-dev
+    #     - python3-dev
+    #     - python3-pip
+    #     - python3-virtualenv
+    #     - build-essential
+    #     - libssl-dev
 
-    - name: 'install nucypher packages [pypi]'
-      pip:
-        name: 'nucypher[ursula]'
-        executable: pip3
+    # - name: 'install nucypher packages [pypi]'
+    #   pip:
+    #     name: 'nucypher[ursula]'
+    #     executable: pip3
+    #     state: latest
 
-    - name: "create geth keystore directory"
-      become: yes
-      file:
-        path: "{{keystore_dir}}"
-        state: directory
-        mode: '0755'
+    # - name: "create geth keystore directory"
+    #   become: yes
+    #   file:
+    #     path: "{{keystore_dir}}"
+    #     state: directory
+    #     mode: '0755'
 
-    - name: "copy local keystore file"
-      become: yes
-      copy:
-        src: "{{WORKER_ACCT_KEYSTORE_PATH}}"
-        dest: "{{keystore_dir}}"
-        owner: root
+    # - name: "copy local keystore file"
+    #   become: yes
+    #   copy:
+    #     src: "{{WORKER_ACCT_KEYSTORE_PATH}}"
+    #     dest: "{{keystore_dir}}"
+    #     owner: root
 
-    - name: find my public ip
-      uri:
-        url: http://ifconfig.me/ip
-        return_content: yes
-      register: ip_response
+    # - name: find my public ip
+    #   uri:
+    #     url: http://whatismyip.akamai.com/
+    #     return_content: yes
+    #   register: ip_response
 
-    - name: "check if /root/.local/share/nucypher/ursula.json exists"
-      stat:
-        path: /root/.local/share/nucypher/ursula.json
-      register: ursula_check
+    # - name: "check if /root/.local/share/nucypher/ursula.json exists"
+    #   stat:
+    #     path: /root/.local/share/nucypher/ursula.json
+    #   register: ursula_check
 
-    - name: "init Ursula worker"
-      when: ursula_check.stat.exists == False
-      command: "nucypher ursula init --provider {{ blockchain_provider }} --worker-address {{NUCYPHER_WORKER_ADDRESS}} --rest-host {{ip_response.content}} --network {{network_name}} --signer keystore:///root/keystore"
-      environment:
-        NUCYPHER_KEYRING_PASSWORD: "{{NUCYPHER_KEYRING_PASSWORD}}"
-        NUCYPHER_WORKER_ETH_PASSWORD: "{{NUCYPHER_WORKER_ETH_PASSWORD}}"
+    # # - name: "remove /root/.local/share/nucypher"
+    # #   file:
+    # #     path: /root/.local/share/nucypher
+    # #     state: absent
 
-    - name: "add Ursula systemd service file"
-      template:
-        dest: /etc/systemd/system/nucypher.service
-        src: templates/nucypher.service.j2
+    # - name: "init Ursula worker"
+    #   when: ursula_check.stat.exists == False
+    #   command: "nucypher ursula init --provider {{ BLOCKCHAIN_PROVIDER }} --worker-address {{NUCYPHER_WORKER_ADDRESS}} --rest-host {{ip_response.content}} --network {{network_name}} --signer keystore:///root/keystore"
+    #   environment:
+    #     NUCYPHER_KEYRING_PASSWORD: "{{NUCYPHER_KEYRING_PASSWORD}}"
+    #     NUCYPHER_WORKER_ETH_PASSWORD: "{{NUCYPHER_WORKER_ETH_PASSWORD}}"
+
+    # - name: "Render sub_provider script"
+    #   template:
+    #     dest: /root/sub_provider.py
+    #     src: templates/sub_provider.py.j2
+
+    # - name: "Substitude Infura Provider"
+    #   command: "python3 /root/sub_provider.py {{BLOCKCHAIN_PROVIDER}}"
+
+    # - name: "wait a few seconds (you can ctrl-C this...)"
+    #   pause:
+    #     seconds: 5
+
+    # - name: "Render Ursula systemd service file"
+    #   template:
+    #     dest: /etc/systemd/system/nucypher.service
+    #     src: templates/nucypher.service.j2
 
     - name: "keep Ursula rinning (systemd service)"
       systemd:
-        state: started
+        # state: started
+        state: restarted
+        # state: stopped
         enabled: yes
         daemon_reload: yes
         name: nucypher
+
+    - name: "wait a few seconds for the ursula process to startup (you can ctrl-C this...)"
+      pause:
+        seconds: 20
+
+    - name: "Register journal content"
+      shell: "journalctl -u nucypher -n 25"
+      register: shell_result
+
+    - name: "Echo journal content"
+      debug:
+        var: shell_result.stdout_lines

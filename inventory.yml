@@ -13,12 +13,13 @@ all:
                 1.1.1.1:
                   WORKER_ACCT_KEYSTORE_PATH: "/Users/sean/Downloads/ethereum/keystore/UTC--2020-10-10T09-50-17.002224000Z--a8acdfee970d0b888f40939bb651377319d9c875"
                   NUCYPHER_WORKER_ADDRESS: "0xa8acdfee970d0b888f40939bb651377319d9c875"
+                  BLOCKCHAIN_PROVIDER: "https://mainnet.infura.io/v3/xxxxxxxxxxx"
 
           vars:
-            network_name: ibex
+            network_name: mainnet
+            ansible_ssh_private_key_file: '/path/to/ssh/private_key'
             keystore_dir: '/root/keystore/'
-            blockchain_provider: 'wss://rinkeby.infura.io/ws/v3/xxxxxxxxxxxxxxxxxxxxxx'
-            geth_options: "--rinkeby"
+            # geth_options: "--rinkeby"
 
             # these can be overridden at the instance level if desired
             NUCYPHER_KEYRING_PASSWORD: xxxxxxxxxxxxxxxxxxxxxxxx
